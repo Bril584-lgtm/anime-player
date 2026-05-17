@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Open Graph for Discord embed -->
+  <meta property="og:type" content="video.other" />
+  <meta property="og:title" content="Anime Player" id="og-title" />
+  <meta property="og:video:type" content="text/html" />
+
+  <title id="page-title">Anime Player</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: sans-serif;
+    }
+    video {
+      width: 100%;
+      max-width: 100vw;
+      max-height: 100vh;
+      display: block;
+      background: #000;
+    }
+    #error {
+      display: none;
+      color: #ff4444;
+      text-align: center;
+      padding: 2rem;
+    }
+    #error h2 { margin-bottom: 0.5rem; font-size: 1.2rem; }
+    #error p  { color: #999; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <video id="player" controls autoplay></video>
+  <div id="error">
+    <h2>No video URL provided</h2>
+    <p>Add <code>?url=YOUR_VIDEO_URL</code> to the address bar.</p>
+  </div>
+
+  <!-- HLS.js for m3u8 streams -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const src    = params.get('url');
+    const title  = params.get('title') || 'Anime Player';
+    const video  = document.getElementById('player');
+    const errBox = document.getElementById('error');
+
+    document.getElementById('page-title').textContent = title;
+    document.getElementById('og-title').content = title;
+
+    if (!src) {
+      video.style.display = 'none';
+      errBox.style.display = 'block';
+    } else if (src.includes('.m3u8') && Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(src);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari native HLS
+      video.src = src;
+      video.play();
+    } else {
+      // Direct mp4 or other
+      video.src = src;
+      video.play();
+    }
+  </script>
+</body>
+</html>
